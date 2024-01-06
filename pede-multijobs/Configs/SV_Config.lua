@@ -1,3 +1,0 @@
-SVConfig = {}
-
-SVConfig.webhookURL = ""
