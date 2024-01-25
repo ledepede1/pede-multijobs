@@ -1,3 +1,7 @@
+if SVConfig.MultiCharESX then
+  ESX = exports["es_extended"]:getSharedObject()
+end
+
 -- Log to webhook
 function Log(msg)
     local embeds = {
@@ -12,13 +16,18 @@ end
 -- Function to get players license
 function GetPlayerCFXID(player)
     local value = -1
-    for _,v in pairs(GetPlayerIdentifiers(player)) do
-        if string.sub(v, 1, string.len("license:")) == "license:" then
-            value = v
-            return value
+
+    if SVConfig.MultiCharESX then
+        return ESX.GetPlayerFromId(player).identifier or "DIDNT FIND IDENTIFIER"
+    else
+        for _,v in pairs(GetPlayerIdentifiers(player)) do
+            if string.sub(v, 1, string.len("license:")) == "license:" then
+                value = v
+                return value
+            end
         end
+        return value
     end
-    return value
 end
 
 -- Get all of the needed information and get into one table
@@ -95,8 +104,10 @@ AddEventHandler("delete:player:job", function (id, job, xplayer)
 
     if xPlayer.job.grade_name == Config.BossName or xPlayer.getGroup() == "admin" then
         -- For dem som bruger eventet med esx society
-        if string.find(id, "char1:") then
-            license = string.gsub(id, "char1:", "license:")
+        if GetResourceState("esx_society") == "started" and not SVConfig.MultiCharESX then
+            if string.find(id, "char1:") then
+                license = string.gsub(id, "char1:", "license:")
+            end
         end
 
         local currentJobs = MySQL.query.await('SELECT `jobs` FROM `pede-multijobs` WHERE `cfxlicense` = ?', {
@@ -116,7 +127,7 @@ AddEventHandler("delete:player:job", function (id, job, xplayer)
             print("Personen har ikke dette job")
         end
     else
-        print("Ingen adgang")
+        Debug("Fejl ved linje 95 - 132 (Print ved linje 130)")
     end
 end)
 
@@ -245,7 +256,7 @@ ESX.RegisterServerCallback("get:all:playerjobs", function (src, cb)
 
         cb(jobsTableMerged, jobsTable)
     else
-        print("fejl")
+        Debug("Fejl ved linje 244 - 262 (Print ved linje 259)")
         cb(nil)
     end
 end)
